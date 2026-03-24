@@ -15,11 +15,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ email: identifier })
     }
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
     // Otherwise, search for a user by full_name using service role
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
 
     const { data, error } = await supabaseAdmin.auth.admin.listUsers()
 

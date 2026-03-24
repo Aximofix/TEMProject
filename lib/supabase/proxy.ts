@@ -1,7 +1,11 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Middleware for updating Supabase session - handles missing env vars gracefully
 export async function updateSession(request: NextRequest) {
+  // Create default response first
+  const defaultResponse = NextResponse.next({ request })
+  
   try {
     let supabaseResponse = NextResponse.next({
       request,

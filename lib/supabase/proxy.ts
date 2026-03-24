@@ -2,20 +2,21 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
-
-  // Check if env vars are available before attempting to create client
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  // If env vars are missing, just return the response without session update
-  if (!supabaseUrl || !supabaseKey) {
-    return supabaseResponse
-  }
-
   try {
+    let supabaseResponse = NextResponse.next({
+      request,
+    })
+
+    // Check if env vars are available before attempting to create client
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    // If env vars are missing, just return the response without session update
+    if (!supabaseUrl || !supabaseKey) {
+      console.log('[v0] Supabase env vars not configured, skipping middleware')
+      return supabaseResponse
+    }
+
     // With Fluid compute, don't put this client in a global environment
     // variable. Always create a new one on each request.
     const supabase = createServerClient(
@@ -67,10 +68,14 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
       }
     }
-  } catch (error) {
-    // If anything fails during Supabase initialization, continue without session
-    console.error('[v0] Supabase middleware error:', error)
-  }
 
-  return supabaseResponse
+    return supabaseResponse
+  } catch (error) {
+    // If anything fails, just return a basic response
+    // This allows the app to load even if Supabase is misconfigured
+    console.error('[v0] Middleware error:', error instanceof Error ? error.message : String(error))
+    return NextResponse.next({
+      request,
+    })
+  }
 }

@@ -4,7 +4,10 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
   full_name TEXT,
+  avatar_url TEXT,
   role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'professor', 'admin')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -23,6 +26,7 @@ CREATE POLICY "profiles_insert_own" ON public.profiles FOR INSERT WITH CHECK (au
 CREATE TABLE IF NOT EXISTS public.courses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
+  code TEXT UNIQUE,
   description TEXT,
   professor_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -50,6 +54,7 @@ CREATE TABLE IF NOT EXISTS public.enrollments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   course_id UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
+  enrollment_date TIMESTAMPTZ DEFAULT NOW(),
   enrolled_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(student_id, course_id)
 );
@@ -74,8 +79,10 @@ CREATE TABLE IF NOT EXISTS public.lessons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   course_id UUID NOT NULL REFERENCES public.courses(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
+  description TEXT,
   content TEXT,
   order_index INTEGER DEFAULT 0,
+  order_num INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -111,6 +118,7 @@ CREATE TABLE IF NOT EXISTS public.assignments (
   title TEXT NOT NULL,
   description TEXT,
   due_date TIMESTAMPTZ NOT NULL,
+  max_points INTEGER DEFAULT 100,
   max_score INTEGER DEFAULT 100,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
